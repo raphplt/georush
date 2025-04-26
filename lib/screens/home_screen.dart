@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:georush/screens/settings_screen.dart';
 import 'game_screen.dart';
+import 'discover_screen.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/trophy_widget.dart';
 import '../services/player_service.dart';
@@ -173,6 +174,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         // TODO : Naviguer vers mode capitales
                       },
                     ),
+                    SizedBox(height: 10),
+                    CustomButton(
+                      text: "Mode découverte",
+                      icon: Icons.map_rounded,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DiscoverScreen(),
+                          ),
+                        );
+                      },
+                    )
                   ],
                 ),
               ),
