@@ -5,9 +5,9 @@ class TrophyWidget extends StatelessWidget {
   final bool unlocked; // true = trophée débloqué, false = encore verrouillé
 
   const TrophyWidget({
-    Key? key,
+    super.key,
     this.unlocked = false, // Par défaut, le trophée est verrouillé
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -8,12 +8,12 @@ class CustomButton extends StatelessWidget {
   final Color color; // Couleur de fond du bouton (optionnel)
 
   const CustomButton({
-    Key? key,
+    super.key,
     required this.text,
     required this.icon,
     required this.onPressed,
     this.color = Colors.blue, // Valeur par défaut : bleu
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
