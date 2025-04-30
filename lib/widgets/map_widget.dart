@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import '../utils/map_styles.dart';
 
 
 class ReusableMap extends StatefulWidget {
@@ -71,11 +70,12 @@ class _ReusableMapState extends State<ReusableMap> {
           ),
           children: [
             TileLayer(
-              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              urlTemplate:
+                  'https://basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png',
               userAgentPackageName: 'com.georush.app',
               tileDisplay: const TileDisplay.fadeIn(),
               additionalOptions: const {
-                'attribution': '© OpenStreetMap contributors',
+                'attribution': '© OpenStreetMap & CARTO',
               },
             ),
             if (widget.markers.isNotEmpty) MarkerLayer(markers: widget.markers),
@@ -93,11 +93,6 @@ class _ReusableMapState extends State<ReusableMap> {
                   child: const Icon(Icons.compass_calibration_outlined),
                   onPressed: () {
                     widget.mapController.rotate(0);
-                    // widget.mapController.move(LatLng(20, 0), 3.0);
-                    // setState(() {
-                    //   _currentZoom = 3.0;
-                    //   _currentCenter = LatLng(20, 0);
-                    // });
                   },
                 ),
                 FloatingActionButton(
