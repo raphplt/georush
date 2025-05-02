@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'storage_service.dart';
 
 class PlayerService {
-  // Singleton pattern
   static final PlayerService _instance = PlayerService._internal();
 
   factory PlayerService() {
@@ -11,7 +10,6 @@ class PlayerService {
 
   PlayerService._internal();
 
-  // Charger les données du joueur depuis le stockage local
   static Future<Map<String, dynamic>> loadPlayerData() async {
     final name = await StorageService.getPlayerName();
     final score = await StorageService.getPlayerScore() ?? 0;
@@ -19,7 +17,6 @@ class PlayerService {
     return {'name': name ?? '', 'score': score};
   }
 
-  // Afficher la boîte de dialogue pour saisir le nom du joueur
   static void showNameDialog(BuildContext context, Function(String) onNameSet) {
     final TextEditingController nameController = TextEditingController();
 

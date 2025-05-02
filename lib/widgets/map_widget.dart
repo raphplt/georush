@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
-
 class ReusableMap extends StatefulWidget {
   final MapController mapController;
   final LatLng center;
   final double zoom;
   final List<Marker> markers;
+  final List<Polygon> polygons;
   final Function(MapCamera position, bool hasGesture)? onPositionChanged;
   final bool showZoomControls;
 
@@ -17,6 +17,7 @@ class ReusableMap extends StatefulWidget {
     required this.center,
     required this.zoom,
     this.markers = const [],
+    this.polygons = const [], 
     this.onPositionChanged,
     this.showZoomControls = true,
   });
@@ -78,6 +79,8 @@ class _ReusableMapState extends State<ReusableMap> {
                 'attribution': '© OpenStreetMap & CARTO',
               },
             ),
+            if (widget.polygons.isNotEmpty)
+              PolygonLayer(polygons: widget.polygons),
             if (widget.markers.isNotEmpty) MarkerLayer(markers: widget.markers),
           ],
         ),

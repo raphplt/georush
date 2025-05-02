@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:georush/screens/settings_screen.dart';
+import 'package:video_player/video_player.dart';
 import 'game_screen.dart';
 import 'discover_screen.dart';
-import '../widgets/custom_button.dart';
-import '../widgets/trophy_widget.dart';
 import '../services/player_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -16,14 +15,26 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String playerName = '';
   int playerScore = 0;
+  late VideoPlayerController _videoController;
 
   @override
   void initState() {
     super.initState();
     _initializePlayerData();
+    _initializeVideo();
   }
 
-  // Initialiser les données du joueur
+  Future<void> _initializeVideo() async {
+    _videoController =
+        VideoPlayerController.asset('assets/images/home_video.mp4')
+          ..setLooping(true)
+          ..initialize().then((_) {
+            if (mounted) {
+              setState(() {});
+            }
+            _videoController.play();
+          });
+  }
   Future<void> _initializePlayerData() async {
     final playerData = await PlayerService.loadPlayerData();
 
@@ -37,7 +48,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Afficher la boîte de dialogue pour le nom
   void _showNameDialog() {
     PlayerService.showNameDialog(context, (String name) {
       setState(() {
@@ -47,15 +57,36 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void dispose() {
+    _videoController.dispose();
+    super.dispose();
+  }
+
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
+      body: Stack(
+        children: [
+          _videoController.value.isInitialized
+              ? SizedBox.expand(
+                child: FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: _videoController.value.size.width,
+                    height: _videoController.value.size.height,
+                    child: VideoPlayer(_videoController),
+                  ),
+                ),
+              )
+              : Container(color: Colors.black),
+          Container(color: Colors.black.withOpacity(0.2)),
+          SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header avec profil et paramètres
+                children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -90,6 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
+                                    color: Colors.white
                               ),
                             ),
                             SizedBox(height: 4),
@@ -97,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               'Score: $playerScore',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.grey.shade700,
+                                    color: Colors.grey.shade300,
                               ),
                             ),
                           ],
@@ -107,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
 
                   IconButton(
-                    icon: Icon(Icons.settings),
+                        icon: Icon(Icons.settings, color: Colors.white),
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -121,64 +153,54 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               SizedBox(height: 20),
 
-              // Section trophées
-              Text(
-                'Trophées',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  TrophyWidget(),
-                  TrophyWidget(),
-                  TrophyWidget(),
-                  TrophyWidget(),
-                ],
-              ),
-
-              SizedBox(height: 30),
-
-              // Section modes de jeu
               Text(
                 'Modes de jeu',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 10),
+                  SizedBox(height: 15),
+
               Expanded(
-                child: ListView(
+                    child: GridView.count(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 16,
+                      crossAxisSpacing: 16,
                   children: [
-                    CustomButton(
-                      text: "Mode Pays",
+                        _buildGameModeTile(
+                          title: "Mode Pays",
                       icon: Icons.public,
-                      onPressed: () {
+                          color: Colors.blue,
+                          onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => GameScreen()),
                         );
                       },
+                          description:
+                              "Testez vos connaissances sur les pays du monde",
                     ),
-                    SizedBox(height: 10),
-                    CustomButton(
-                      text: "Mode Drapeaux",
+                        _buildGameModeTile(
+                          title: "Mode Drapeaux",
                       icon: Icons.flag,
-                      onPressed: () {
+                          color: Colors.red,
+                          onTap: () {
                         // TODO : Naviguer vers mode drapeaux
                       },
+                          description: "Reconnaissez les drapeaux des nations",
                     ),
-                    SizedBox(height: 10),
-                    CustomButton(
-                      text: "Mode Capitales",
+                        _buildGameModeTile(
+                          title: "Mode Capitales",
                       icon: Icons.location_city,
-                      onPressed: () {
+                          color: Colors.green,
+                          onTap: () {
                         // TODO : Naviguer vers mode capitales
                       },
+                          description: "Trouvez les capitales des pays",
                     ),
-                    SizedBox(height: 10),
-                    CustomButton(
-                      text: "Mode découverte",
+                        _buildGameModeTile(
+                          title: "Mode découverte",
                       icon: Icons.map_rounded,
-                      onPressed: () {
+                          color: Colors.amber,
+                          onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -186,8 +208,62 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         );
                       },
-                    )
-                  ],
+                          description: "Explorez et apprenez sans pression",
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ]
+
+      )
+
+    );
+  }
+
+  Widget _buildGameModeTile({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+    required String description,
+  }) {
+    return Card(
+      elevation: 5,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(15),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 40, color: color),
+              ),
+              SizedBox(height: 12),
+              Text(
+                title,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 6),
+              Expanded(
+                child: Text(
+                  description,
+                  style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
                 ),
               ),
             ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../widgets/map_widget.dart';
 import '../models/game_logic.dart';
 import '../helpers/map_helper.dart';
@@ -15,9 +16,9 @@ class _GameScreenState extends State<GameScreen> {
   late GameLogic gameLogic;
   late MapHelper mapHelper;
   List<Marker> mapMarkers = [];
+  List<Polygon> countryPolygons = [];
   bool isLoading = true;
   String lastLoadedCountry = '';
-  
   @override
   void initState() {
     super.initState();
@@ -33,12 +34,10 @@ class _GameScreenState extends State<GameScreen> {
   void _updateUI() {
     if (mounted) {
       setState(() {
-        // Vérifier si nous avons une nouvelle question
         if (lastLoadedCountry != gameLogic.correctAnswer) {
           _loadCurrentMarker();
         }
         
-        // Afficher l'écran de fin de jeu si c'est terminé
         if (gameLogic.isGameOver) {
           _showGameOverDialog();
         }
@@ -50,21 +49,25 @@ class _GameScreenState extends State<GameScreen> {
     setState(() {
       isLoading = true;
       mapMarkers.clear();
+      countryPolygons.clear();
     });
-    
-    // Mémoriser le pays que nous sommes en train de charger
+
     lastLoadedCountry = gameLogic.correctAnswer;
-    
-    final countryLocation = await gameLogic.loadCountryMarker();
-    
-    if (countryLocation != null && mounted) {
+
+    final countryData = await gameLogic.loadCountryGeoJson();
+
+    if (countryData != null && mounted) {
+      final geometry = countryData['geometry'];
+      final centroid = countryData['centroid'] as LatLng?;
+
       setState(() {
-        mapMarkers.add(mapHelper.createLocationMarker(countryLocation));
+        countryPolygons = mapHelper.polygonsFromGeoJson(geometry);
         isLoading = false;
       });
-      
-      // Centrer la carte sur le pays
-      mapHelper.centerOnLocation(countryLocation, 5.0);
+
+      if (centroid != null) {
+        mapHelper.centerOnLocation(centroid, 5.0);
+      }
     }
   }
   
@@ -87,7 +90,6 @@ class _GameScreenState extends State<GameScreen> {
               ElevatedButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  // Réinitialiser le jeu
                   setState(() {
                     gameLogic = GameLogic();
                     gameLogic.addListener(_updateUI);
@@ -115,16 +117,25 @@ class _GameScreenState extends State<GameScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Geo Rush - Jeu'),
         centerTitle: true,
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Center(
-              child: Text(
-                'Score: ${gameLogic.score}',
-                style: TextStyle(fontSize: 18),
-              ),
+            child: Row(
+              children: [
+                Row(
+                  children: List.generate(
+                    gameLogic.lives,
+                    (index) =>
+                        Icon(Icons.favorite, color: Colors.red, size: 20),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Text(
+                  'Score: ${gameLogic.score}',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ],
             ),
           ),
         ],
@@ -136,6 +147,7 @@ class _GameScreenState extends State<GameScreen> {
             center: mapHelper.initialPosition,
             zoom: 5.0,
             markers: mapMarkers,
+            polygons: countryPolygons,
             showZoomControls: false,
           ),
 
@@ -198,23 +210,31 @@ Widget _buildAnswerOptions() {
         crossAxisSpacing: 10,
         children:
             gameLogic.options.map((option) {
-              Color? buttonColor;
-              if (gameLogic.showingFeedback) {
-                if (option == gameLogic.correctAnswer) {
-                  buttonColor = Colors.green;
-                } else if (option == gameLogic.selectedAnswer &&
-                    gameLogic.selectedAnswer != gameLogic.correctAnswer) {
-                  buttonColor = Colors.red;
-                }
+              // Couleur par défaut
+              Color backgroundColor =
+                  Theme.of(
+                    context,
+                  ).elevatedButtonTheme.style?.backgroundColor?.resolve({}) ??
+                  Colors.blue.shade700;
+              Color foregroundColor = Colors.white;
+
+              if (gameLogic.showingFeedback &&
+                  option == gameLogic.selectedAnswer) {
+                backgroundColor =
+                    option == gameLogic.correctAnswer
+                        ? Colors.green
+                        : Colors.red;
               }
 
               return ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.all(backgroundColor),
+                  foregroundColor: WidgetStateProperty.all(foregroundColor),
+                  shape: WidgetStateProperty.all(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  backgroundColor: buttonColor,
-                  foregroundColor: buttonColor != null ? Colors.white : null,
                 ),
                 onPressed:
                     isLoading || gameLogic.showingFeedback
