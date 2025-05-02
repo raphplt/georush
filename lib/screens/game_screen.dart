@@ -6,7 +6,11 @@ import '../models/game_logic.dart';
 import '../helpers/map_helper.dart';
 
 class GameScreen extends StatefulWidget {
-  const GameScreen({super.key});
+  const GameScreen({
+    super.key,
+    required String difficulty,
+    required String mode,
+  });
 
   @override
   State<GameScreen> createState() => _GameScreenState();

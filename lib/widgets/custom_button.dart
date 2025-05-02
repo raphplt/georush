@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 
-/// Bouton customisable utilisé sur l'écran d'accueil et dans d'autres parties du jeu
 class CustomButton extends StatelessWidget {
-  final String text; // Texte du bouton
-  final IconData icon; // Icône affiché avant le texte
-  final VoidCallback onPressed; // Action au clic
-  final Color color; // Couleur de fond du bouton (optionnel)
+  final String text;
+  final IconData icon;
+  final VoidCallback onPressed;
+  final Color color;
 
   const CustomButton({
     super.key,
     required this.text,
     required this.icon,
     required this.onPressed,
-    this.color = Colors.blue, // Valeur par défaut : bleu
+    this.color = Colors.blue, 
   });
 
   @override
@@ -25,7 +24,7 @@ class CustomButton extends StatelessWidget {
       ),
       onPressed: onPressed,
       child: Row(
-        mainAxisSize: MainAxisSize.min, // Garde le bouton compact
+        mainAxisSize: MainAxisSize.min, 
         children: [
           Icon(icon, color: Colors.white),
           SizedBox(width: 8),

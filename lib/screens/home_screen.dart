@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:georush/screens/settings_screen.dart';
+import 'package:georush/screens/start_game.dart';
 import 'package:video_player/video_player.dart';
-import 'game_screen.dart';
 import 'discover_screen.dart';
 import '../services/player_service.dart';
 
@@ -170,11 +170,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       icon: Icons.public,
                           color: Colors.blue,
                           onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => GameScreen()),
-                        );
-                      },
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => StartGameScreen(),
+                              ),
+                            );
+                          },
                           description:
                               "Testez vos connaissances sur les pays du monde",
                     ),
