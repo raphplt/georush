@@ -50,11 +50,9 @@ class GameService {
     return score ?? 0;
   }
 
-  // Pour la rétrocompatibilité avec le code existant
   static Future<Map<String, dynamic>> loadGameData() async {
     final scores = await loadAllGameScores();
 
-    // Création d'un map avec tous les scores des modes de jeu
     Map<String, dynamic> gameData = {
       'countryScore': scores[GameMode.COUNTRY] ?? 0,
       'cityScore': scores[GameMode.CITY] ?? 0,

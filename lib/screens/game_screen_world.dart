@@ -1,54 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:georush/models/game_logic_countries.dart';
 import 'package:latlong2/latlong.dart';
 import '../widgets/map_widget.dart';
-import '../models/game_logic.dart';
 import '../helpers/map_helper.dart';
 
 class GameScreen extends StatefulWidget {
-  const GameScreen({
-    super.key,
-    required String difficulty,
-    required String mode,
-  });
+  final String difficulty;
+  final String mode;
+
+  const GameScreen({super.key, required this.difficulty, required this.mode});
 
   @override
   State<GameScreen> createState() => _GameScreenState();
 }
 
 class _GameScreenState extends State<GameScreen> {
-  late GameLogic gameLogic;
+  late GameLogicCountries gameLogic;
   late MapHelper mapHelper;
   List<Marker> mapMarkers = [];
   List<Polygon> countryPolygons = [];
   bool isLoading = true;
   String lastLoadedCountry = '';
+  late String difficulty;
+  late String mode;
+
   @override
   void initState() {
     super.initState();
-    
-    gameLogic = GameLogic();
+
+    difficulty = widget.difficulty;
+    mode = widget.mode;
+
+    gameLogic = GameLogicCountries(difficulty: difficulty, mode: mode);
     mapHelper = MapHelper();
-    
+
     gameLogic.addListener(_updateUI);
-    
+
     _loadCurrentMarker();
   }
-  
+
   void _updateUI() {
     if (mounted) {
       setState(() {
         if (lastLoadedCountry != gameLogic.correctAnswer) {
           _loadCurrentMarker();
         }
-        
+
         if (gameLogic.isGameOver) {
           _showGameOverDialog();
         }
       });
     }
   }
-  
+
   Future<void> _loadCurrentMarker() async {
     setState(() {
       isLoading = true;
@@ -74,7 +79,7 @@ class _GameScreenState extends State<GameScreen> {
       }
     }
   }
-  
+
   void _showGameOverDialog() {
     showDialog(
       context: context,
@@ -88,6 +93,7 @@ class _GameScreenState extends State<GameScreen> {
                 onPressed: () {
                   Navigator.of(context).pop();
                   Navigator.of(context).pop();
+                  Navigator.of(context).pop();
                 },
                 child: Text('Retour au menu'),
               ),
@@ -95,7 +101,10 @@ class _GameScreenState extends State<GameScreen> {
                 onPressed: () {
                   Navigator.of(context).pop();
                   setState(() {
-                    gameLogic = GameLogic();
+                    gameLogic = GameLogicCountries(
+                      difficulty: difficulty,
+                      mode: mode,
+                    );
                     gameLogic.addListener(_updateUI);
                     lastLoadedCountry = '';
                     mapMarkers.clear();
@@ -128,11 +137,22 @@ class _GameScreenState extends State<GameScreen> {
             child: Row(
               children: [
                 Row(
-                  children: List.generate(
-                    gameLogic.lives,
-                    (index) =>
+                  children: [
+                    if (gameLogic.lives > 10) ...[
+                      Icon(Icons.favorite, color: Colors.red, size: 20),
+                      SizedBox(width: 4),
+                      Text(
+                        'Vies infinies',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ] else ...[
+                      for (int i = 0; i < gameLogic.lives; i++)
                         Icon(Icons.favorite, color: Colors.red, size: 20),
-                  ),
+                    ],
+                  ],
                 ),
                 SizedBox(width: 12),
                 Text(
@@ -159,8 +179,7 @@ class _GameScreenState extends State<GameScreen> {
 
           SafeArea(
             child: Column(
-              children: [
-                _buildTimerBar(), Spacer(), _buildAnswerOptions()],
+              children: [_buildTimerBar(), Spacer(), _buildAnswerOptions()],
             ),
           ),
         ],
@@ -185,6 +204,7 @@ class _GameScreenState extends State<GameScreen> {
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 8),
+            // Text('${gameLogic.timeLeft} sec', style: TextStyle(fontSize: 16)),
             LinearProgressIndicator(
               value: gameLogic.timeLeft / gameLogic.initialTime,
               color: Colors.blue[800],
@@ -197,8 +217,8 @@ class _GameScreenState extends State<GameScreen> {
       ),
     );
   }
-  
-Widget _buildAnswerOptions() {
+
+  Widget _buildAnswerOptions() {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.5),

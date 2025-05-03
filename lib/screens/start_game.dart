@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'game_screen.dart';
+import 'game_screen_world.dart';
 
 class StartGameScreen extends StatefulWidget {
   const StartGameScreen({super.key});
@@ -93,7 +93,15 @@ class _StartGameScreenState extends State<StartGameScreen> {
                   ),
                 );
               },
-              child: Text('Commencer la partie'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[700],
+                padding: EdgeInsets.symmetric(vertical: 16),
+                textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              child: Text(
+                'Commencer la partie',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         ),

@@ -6,7 +6,7 @@ import 'package:latlong2/latlong.dart';
 import '../services/load_geojson.dart';
 import '../data/countries.dart';
 
-class GameLogic extends ChangeNotifier {
+class GameLogicCities extends ChangeNotifier {
   int score = 0;
   int timeLeft = 30;
   int maxScore = 0;
@@ -28,7 +28,28 @@ class GameLogic extends ChangeNotifier {
   bool? isLastAnswerCorrect;
   bool showingFeedback = false;
 
-  GameLogic() {
+  GameLogic({String difficulty = 'Facile', String mode = '3 vies'}) {
+    switch (difficulty) {
+      case 'Facile':
+        initialTime = 30;
+        break;
+      case 'Moyen':
+        initialTime = 20;
+        break;
+      case 'Difficile':
+        initialTime = 10;
+        break;
+      default:
+        initialTime = 30;
+    }
+    timeLeft = initialTime;
+
+    if (mode == 'Illimité') {
+      lives = 9999;
+    } else {
+      lives = 3;
+    }
+
     loadNewQuestion();
     startTimer();
   }
@@ -180,7 +201,7 @@ class GameLogic extends ChangeNotifier {
     }
     return null;
   }
-  
+
   Future<Map<String, dynamic>?> loadCountryGeoJson() async {
     try {
       final geoJsonData = await loadGeoJson();

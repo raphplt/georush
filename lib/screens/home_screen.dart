@@ -153,10 +153,14 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               SizedBox(height: 20),
 
-              Text(
-                'Modes de jeu',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+                  // Text(
+                  //   'Modes de jeu',
+                  //       style: TextStyle(
+                  //         fontSize: 20,
+                  //         fontWeight: FontWeight.bold,
+                  //         color: Colors.white,
+                  //       ),
+                  // ),
                   SizedBox(height: 15),
 
               Expanded(
