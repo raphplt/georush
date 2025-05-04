@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:georush/screens/game_screen_cities_fr.dart';
+import 'package:georush/screens/leaderboard_screen.dart';
 import 'package:georush/screens/settings_screen.dart';
 import 'package:georush/screens/start_game.dart';
 import 'discover_screen.dart';
@@ -13,7 +15,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String playerName = '';
-  int playerScore = 0;
 
   @override
   void initState() {
@@ -27,7 +28,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     setState(() {
       playerName = playerData['name'];
-      playerScore = playerData['score'];
     });
 
     if (playerName.isEmpty) {
@@ -107,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             SizedBox(height: 4),
                             Text(
-                              'Score: $playerScore',
+                                  'Débutant',
                               style: TextStyle(
                                 fontSize: 14,
                                     color: Colors.grey.shade300,
@@ -118,7 +118,21 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
 
+                          IconButton(
+                            icon: Icon(Icons.leaderboard, color: Colors.white),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => LeaderboardScreen(),
+                                ),
+                              );
+                            },
+                          ), 
                   IconButton(
                         icon: Icon(Icons.settings, color: Colors.white),
                     onPressed: () {
@@ -130,8 +144,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     },
                   ),
-                ],
-              ),
+                        ],
+                      ),
+                    ],
+                  ),
               SizedBox(height: 20),
 
                   // Text(
@@ -175,13 +191,23 @@ class _HomeScreenState extends State<HomeScreen> {
                           description: "Reconnaissez les drapeaux des nations",
                     ),
                         _buildGameModeTile(
-                          title: "Mode Capitales",
+                          title: "Villes Françaises",
                       icon: Icons.location_city,
                           color: Colors.green,
                           onTap: () {
-                        // TODO : Naviguer vers mode capitales
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => GameScreenCitiesFr(
+                                      difficulty: "Facile",
+                                      mode: 'Villes',
+                                    ),
+                              ),
+                            );
                       },
-                          description: "Trouvez les capitales des pays",
+                          description:
+                              "Testez vos connaissances sur les villes françaises",
                     ),
                         _buildGameModeTile(
                           title: "Mode découverte",

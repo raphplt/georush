@@ -5,7 +5,6 @@ class GameMode {
   static const String CITY = 'city';
   static const String FLAG = 'flag';
   static const String MONUMENT = 'monument';
-  // Ajouter d'autres modes de jeu selon les besoins
 }
 
 class GameService {

@@ -4,6 +4,8 @@ import 'package:georush/models/game_logic_countries.dart';
 import 'package:latlong2/latlong.dart';
 import '../widgets/map_widget.dart';
 import '../helpers/map_helper.dart';
+import '../services/game_service.dart';
+
 
 class GameScreen extends StatefulWidget {
   final String difficulty;
@@ -24,6 +26,7 @@ class _GameScreenState extends State<GameScreen> {
   String lastLoadedCountry = '';
   late String difficulty;
   late String mode;
+  int bestScore = 0;
 
   @override
   void initState() {
@@ -38,7 +41,9 @@ class _GameScreenState extends State<GameScreen> {
     gameLogic.addListener(_updateUI);
 
     _loadCurrentMarker();
+    _loadBestScore();
   }
+
 
   void _updateUI() {
     if (mounted) {
@@ -52,6 +57,11 @@ class _GameScreenState extends State<GameScreen> {
         }
       });
     }
+  }
+
+  Future<void> _loadBestScore() async {
+    bestScore = await GameService.loadGameModeScore(GameMode.COUNTRY);
+    setState(() {});
   }
 
   Future<void> _loadCurrentMarker() async {
@@ -81,13 +91,19 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _showGameOverDialog() {
+    if (gameLogic.score > bestScore) {
+      GameService.saveGameModeScore(GameMode.COUNTRY, gameLogic.score);
+      bestScore = gameLogic.score;
+    }
     showDialog(
       context: context,
       barrierDismissible: false,
       builder:
           (context) => AlertDialog(
             title: Text('Partie terminée'),
-            content: Text('Votre score: ${gameLogic.score}'),
+            content: Text(
+              'Votre score: ${gameLogic.score}\nMeilleur score: $bestScore',
+            ),
             actions: [
               TextButton(
                 onPressed: () {
