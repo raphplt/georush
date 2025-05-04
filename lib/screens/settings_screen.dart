@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/player_service.dart';
+import 'package:provider/provider.dart';
+import '../services/audio_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -18,7 +20,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadPlayerData();
   }
 
-  // Utilisation du service pour charger les données du joueur
   Future<void> _loadPlayerData() async {
     final playerData = await PlayerService.loadPlayerData();
 
@@ -28,7 +29,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  // Ouvrir la boîte de dialogue pour changer le nom
   void _changePlayerName() {
     PlayerService.showNameDialog(context, (String newName) {
       setState(() {
@@ -39,6 +39,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final audioService = Provider.of<AudioService>(context);
     return Scaffold(
       appBar: AppBar(title: Text('Paramètres')),
       body: Padding(
@@ -46,7 +47,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Profil du joueur
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -86,9 +86,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
             ),
-
-            // Vous pouvez ajouter d'autres paramètres ici
-            // Par exemple: réinitialiser les progrès, changer les paramètres sonores, etc.
+            SizedBox(height: 24),
+            Card(
+              child: ListTile(
+                leading: Icon(
+                  audioService.isMuted ? Icons.music_off : Icons.music_note,
+                ),
+                title: Text('Musique'),
+                trailing: Switch(
+                  value: !audioService.isMuted,
+                  onChanged: (value) {
+                    audioService.toggleMute();
+                  },
+                ),
+                onTap: audioService.toggleMute,
+              ),
+            ),
           ],
         ),
       ),

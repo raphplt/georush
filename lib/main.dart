@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'screens/splash_screen.dart';
+import 'services/audio_service.dart';
 
 void main() {
-  runApp(GeoRushApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AudioService(),
+      child: const GeoRushApp(),
+    ),
+  );
 }
 
 class GeoRushApp extends StatelessWidget {

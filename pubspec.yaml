@@ -1,5 +1,7 @@
 name: georush
-description: "A new Flutter project."
+description: "A video game that combines geography and trivia, where players
+  answer questions about countries and their capitals, with a focus on
+  learning and fun."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -34,6 +36,8 @@ dependencies:
   flutter_map: ^8.1.1
   latlong2: ^0.9.1
   video_player: ^2.7.0
+  audioplayers: ^6.4.0
+  provider: ^6.1.5
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -65,6 +69,8 @@ flutter:
   assets:
     - assets/countries.geojson
     - assets/images/
+    - assets/videos/
+    - assets/sounds/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

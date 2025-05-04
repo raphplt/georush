@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:georush/screens/settings_screen.dart';
 import 'package:georush/screens/start_game.dart';
-import 'package:video_player/video_player.dart';
 import 'discover_screen.dart';
 import '../services/player_service.dart';
 
@@ -15,26 +14,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String playerName = '';
   int playerScore = 0;
-  late VideoPlayerController _videoController;
 
   @override
   void initState() {
     super.initState();
     _initializePlayerData();
-    _initializeVideo();
   }
 
-  Future<void> _initializeVideo() async {
-    _videoController =
-        VideoPlayerController.asset('assets/images/home_video.mp4')
-          ..setLooping(true)
-          ..initialize().then((_) {
-            if (mounted) {
-              setState(() {});
-            }
-            _videoController.play();
-          });
-  }
+
   Future<void> _initializePlayerData() async {
     final playerData = await PlayerService.loadPlayerData();
 
@@ -58,7 +45,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    _videoController.dispose();
     super.dispose();
   }
 
@@ -68,19 +54,14 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          _videoController.value.isInitialized
-              ? SizedBox.expand(
-                child: FittedBox(
-                  fit: BoxFit.cover,
-                  child: SizedBox(
-                    width: _videoController.value.size.width,
-                    height: _videoController.value.size.height,
-                    child: VideoPlayer(_videoController),
-                  ),
-                ),
-              )
-              : Container(color: Colors.black),
-          Container(color: Colors.black.withOpacity(0.2)),
+          Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/background_splash.png'),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
           SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),

@@ -1,22 +1,67 @@
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 import 'home_screen.dart';
+import 'package:provider/provider.dart';
+import '../services/audio_service.dart';
+import 'settings_screen.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  late VideoPlayerController _videoController;
+  bool _isVideoReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeVideo();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<AudioService>(context, listen: false).playMusic();
+    });
+  }
+
+  Future<void> _initializeVideo() async {
+    _videoController = VideoPlayerController.asset('assets/videos/splash.mp4')
+      ..setLooping(true);
+    await _videoController.initialize();
+    if (mounted) {
+      setState(() {
+        _isVideoReady = true;
+      });
+      _videoController.play();
+    }
+  }
+
+  @override
+  void dispose() {
+    _videoController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final audioService = Provider.of<AudioService>(context);
     return Scaffold(
       body: Stack(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/background_splash.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
+          _isVideoReady
+              ? SizedBox.expand(
+                child: FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: _videoController.value.size.width,
+                    height: _videoController.value.size.height,
+                    child: VideoPlayer(_videoController),
+                  ),
+                ),
+              )
+              : Container(color: Colors.black),
+          Container(color: Colors.black.withOpacity(0.2)),
           SafeArea(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -30,21 +75,28 @@ class SplashScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.music_note, color: Colors.white),
-                        onPressed: () {
-                          // TODO : Activer / désactiver musique
-                        },
+                        icon: Icon(
+                          audioService.isMuted
+                              ? Icons.music_off
+                              : Icons.music_note,
+                          color: Colors.white,
+                        ),
+                        onPressed: audioService.toggleMute,
                       ),
                       IconButton(
                         icon: Icon(Icons.settings, color: Colors.white),
                         onPressed: () {
-                          // TODO : Naviguer vers l'écran paramètres
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SettingsScreen(),
+                            ),
+                          );
                         },
                       ),
                     ],
                   ),
                 ),
-                // Titre principal
                 Center(
                   child: Text(
                     'GEO RUSH',
