@@ -649,12 +649,6 @@ class Countries {
       continent: "Oceania",
     ),
     Country(
-      name: "Palestine",
-      code: "PS",
-      capital: "East Jerusalem",
-      continent: "Asia",
-    ),
-    Country(
       name: "Panama",
       code: "PA",
       capital: "Panama City",

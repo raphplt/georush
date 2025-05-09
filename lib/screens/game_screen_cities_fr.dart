@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:georush/helpers/map_helper_fr.dart';
 import 'package:georush/widgets/france_map_widget.dart';
 
 class GameScreenCitiesFr extends StatefulWidget {
@@ -16,15 +17,17 @@ class GameScreenCitiesFr extends StatefulWidget {
 }
 
 class _GameScreenCitiesFrState extends State<GameScreenCitiesFr> {
+  late MapHelperFr mapHelperFr;
   @override
   void initState() {
     super.initState();
-    // Initialize game logic and other components here
+    mapHelperFr = MapHelperFr();
   }
+
+
 
   @override
   void dispose() {
-    // Dispose of any resources here
     super.dispose();
   }
 
@@ -32,7 +35,9 @@ class _GameScreenCitiesFrState extends State<GameScreenCitiesFr> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Game Screen - Cities (FR)')),
-      body: Stack(children: [FranceMap(mapController: mapController)]),
+      body: Stack(
+        children: [FranceMap(mapController: mapHelperFr.mapController)],
+      ),
     );
   }
 }

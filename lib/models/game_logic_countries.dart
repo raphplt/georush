@@ -176,6 +176,21 @@ class GameLogicCountries extends ChangeNotifier {
     }
   }
 
+  void skipCurrentQuestion() {
+    // Passer à la question suivante
+    showingFeedback = false;
+    selectedAnswer = null;
+    isLastAnswerCorrect = null;
+
+    // Si le jeu n'est pas déjà terminé
+    if (!isGameOver) {
+      loadNewQuestion();
+      resetTimer();
+      startTimer();
+      notifyListeners();
+    }
+  }
+
   void endGame() {
     isGameOver = true;
     _timer?.cancel();
@@ -196,30 +211,48 @@ class GameLogicCountries extends ChangeNotifier {
           return extractCentroid(geometry);
         }
       }
+      
+      print('Pays non trouvé dans le GeoJSON: $correctAnswer');
     } catch (e) {
       print('Error loading GeoJSON: $e');
     }
     return null;
   }
 
-  Future<Map<String, dynamic>?> loadCountryGeoJson() async {
+Future<Map<String, dynamic>?> loadCountryGeoJson() async {
     try {
-      final geoJsonData = await loadGeoJson();
-      final features = geoJsonData['features'] as List;
+      final geoJsonData = await loadGeoJson().timeout(
+        Duration(seconds: 5),
+        onTimeout: () {
+          print('Timeout lors du chargement du GeoJSON pour: $correctAnswer');
+          return <String, dynamic>{};
+        },
+      );
+
+      if (geoJsonData == null || geoJsonData.isEmpty) return null;
+
+      final features = geoJsonData['features'] as List?;
+      if (features == null || features.isEmpty) return null;
+
+      bool countryFound = false;
 
       for (var feature in features) {
         final properties = feature['properties'] as Map<String, dynamic>;
         final countryName = properties['name'] as String;
 
         if (countryName == correctAnswer) {
+          countryFound = true;
           final geometry = feature['geometry'];
           final centroid = extractCentroid(geometry);
-
           return {'geometry': geometry, 'centroid': centroid};
         }
       }
+
+      if (!countryFound) {
+        print('Pays non trouvé dans le GeoJSON: $correctAnswer');
+      }
     } catch (e) {
-      print('Error loading GeoJSON: $e');
+      print('Error loading country GeoJSON: $e');
     }
     return null;
   }

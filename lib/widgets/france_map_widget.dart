@@ -28,7 +28,7 @@ class FranceMap extends StatelessWidget {
           LatLng(51.5, 9.5), // Nord-Est
         ),
         interactionOptions: const InteractionOptions(
-          flags: InteractiveFlag.all,
+          flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
         ),
         onPositionChanged: onPositionChanged,
       ),

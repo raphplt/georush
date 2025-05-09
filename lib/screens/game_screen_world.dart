@@ -64,7 +64,7 @@ class _GameScreenState extends State<GameScreen> {
     setState(() {});
   }
 
-  Future<void> _loadCurrentMarker() async {
+Future<void> _loadCurrentMarker() async {
     setState(() {
       isLoading = true;
       mapMarkers.clear();
@@ -73,23 +73,39 @@ class _GameScreenState extends State<GameScreen> {
 
     lastLoadedCountry = gameLogic.correctAnswer;
 
-    final countryData = await gameLogic.loadCountryGeoJson();
+    try {
+      final countryData = await gameLogic.loadCountryGeoJson();
 
-    if (countryData != null && mounted) {
-      final geometry = countryData['geometry'];
-      final centroid = countryData['centroid'] as LatLng?;
+      if (countryData != null && mounted) {
+        final geometry = countryData['geometry'];
+        final centroid = countryData['centroid'] as LatLng?;
 
-      setState(() {
-        countryPolygons = mapHelper.polygonsFromGeoJson(geometry);
-        isLoading = false;
-      });
+        setState(() {
+          countryPolygons = mapHelper.polygonsFromGeoJson(geometry);
+          isLoading = false;
+        });
 
-      if (centroid != null) {
-        mapHelper.centerOnLocation(centroid, 5.0);
+        if (centroid != null) {
+          mapHelper.centerOnLocation(centroid, 5.0);
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+          });
+          gameLogic.skipCurrentQuestion();
+        }
+      }
+    } catch (e) {
+      print('Error loading country marker: $e');
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+        gameLogic.skipCurrentQuestion();
       }
     }
   }
-
   void _showGameOverDialog() {
     if (gameLogic.score > bestScore) {
       GameService.saveGameModeScore(GameMode.COUNTRY, gameLogic.score);
