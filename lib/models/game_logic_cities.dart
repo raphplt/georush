@@ -3,8 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import '../services/load_geojson.dart';
-import '../data/countries.dart';
+import '../data/french_cities.dart';
 
 class GameLogicCities extends ChangeNotifier {
   int score = 0;
@@ -12,23 +11,22 @@ class GameLogicCities extends ChangeNotifier {
   int maxScore = 0;
   int lives = 3;
   int initialTime = 30;
-  List<String> options = [];
-  String correctAnswer = '';
-  List<Marker> mapMarkers = [];
+  String currentCity = '';
+  LatLng? currentCityLocation;
+  LatLng? playerMarkerLocation;
+  Marker? playerMarker;
+  Marker? actualCityMarker;
   Timer? _timer;
   Random random = Random();
-
-  List<String> usedCountries = [];
-
-  final int optionsCount = 4;
-
+  List<String> usedCities = [];
   bool isGameOver = false;
-
-  String? selectedAnswer;
-  bool? isLastAnswerCorrect;
   bool showingFeedback = false;
+  double? distance;
+  int? pointsEarned;
+  bool isAnimating = false;
+  double animationProgress = 0.0;
 
-  GameLogic({String difficulty = 'Facile', String mode = '3 vies'}) {
+  GameLogicCities({String difficulty = 'Facile', String mode = '3 vies'}) {
     switch (difficulty) {
       case 'Facile':
         initialTime = 30;
@@ -50,7 +48,7 @@ class GameLogicCities extends ChangeNotifier {
       lives = 3;
     }
 
-    loadNewQuestion();
+    loadNewCity();
     startTimer();
   }
 
@@ -70,196 +68,121 @@ class GameLogicCities extends ChangeNotifier {
     notifyListeners();
   }
 
-  void loadNewQuestion() {
-    mapMarkers.clear();
-
-    final Country correctCountry = _getRandomCountry();
-    correctAnswer = correctCountry.name;
-
-    usedCountries.add(correctAnswer);
-    if (usedCountries.length > 10) {
-      usedCountries.removeAt(0);
+  void loadNewCity() {
+    final City city = _getRandomCity();
+    currentCity = city.name;
+    currentCityLocation = LatLng(
+      double.parse(city.latitude),
+      double.parse(city.longitude),
+    );
+    playerMarker = null;
+    playerMarkerLocation = null;
+    actualCityMarker = null;
+    distance = null;
+    pointsEarned = null;
+    isAnimating = false;
+    animationProgress = 0.0;
+    usedCities.add(currentCity);
+    
+    if (usedCities.length > 20) {
+      usedCities.removeAt(0);
     }
-
-    options = _generateOptions(correctCountry);
 
     notifyListeners();
   }
 
-  List<String> _generateOptions(Country correctCountry) {
-    List<String> result = [correctCountry.name];
-
-    List<Country> availableCountries =
-        Countries.all
-            .where((country) => country.name != correctCountry.name)
+  City _getRandomCity() {
+    List<City> availableCities =
+        FrenchCities.cities
+            .where((city) => !usedCities.contains(city.name))
             .toList();
 
-    List<Country> sameContinent =
-        availableCountries
-            .where((country) => country.continent == correctCountry.continent)
-            .toList();
-
-    sameContinent.shuffle(random);
-
-    int continentCount = min(2, sameContinent.length);
-    for (int i = 0; i < continentCount; i++) {
-      result.add(sameContinent[i].name);
+    if (availableCities.isEmpty) {
+      availableCities = FrenchCities.cities;
     }
 
-    if (result.length < optionsCount) {
-      availableCountries.removeWhere(
-        (country) => result.contains(country.name),
-      );
-      availableCountries.shuffle(random);
-
-      while (result.length < optionsCount && availableCountries.isNotEmpty) {
-        result.add(availableCountries.removeAt(0).name);
-      }
-    }
-
-    result.shuffle(random);
-
-    return result;
+    return availableCities[random.nextInt(availableCities.length)];
   }
 
-  Country _getRandomCountry() {
-    List<Country> availableCountries =
-        Countries.all
-            .where((country) => !usedCountries.contains(country.name))
-            .toList();
-
-    if (availableCountries.isEmpty) {
-      availableCountries = Countries.all;
-    }
-
-    return availableCountries[random.nextInt(availableCountries.length)];
+  void placeMarker(LatLng location) {
+    playerMarkerLocation = location;
+    playerMarker = Marker(
+      point: location,
+      width: 30,
+      height: 30,
+      child: Icon(Icons.location_on, color: Colors.red, size: 30),
+    );
+    notifyListeners();
   }
 
-  void checkAnswer(String selectedOption) {
+  void validateAnswer() {
+    if (playerMarkerLocation == null || currentCityLocation == null) return;
+
     _timer?.cancel();
+    
+    // Calculate distance between player marker and actual city location
+    final Distance distanceCalculator = Distance();
+    distance = distanceCalculator.as(
+      LengthUnit.Kilometer,
+      playerMarkerLocation!,
+      currentCityLocation!,
+    );
 
-    selectedAnswer = selectedOption;
-    bool isCorrect = selectedOption == correctAnswer;
-    isLastAnswerCorrect = isCorrect;
+    // Calculate points based on distance
+    pointsEarned = _calculatePoints(distance!);
+    score += pointsEarned!;
+    maxScore = max(maxScore, score);
+
+    // Show actual city location
+    actualCityMarker = Marker(
+      point: currentCityLocation!,
+      width: 30,
+      height: 30,
+      child: Icon(Icons.location_city, color: Colors.blue, size: 30),
+    );
+
     showingFeedback = true;
-
+    isAnimating = true;
     notifyListeners();
 
-    if (isCorrect) {
-      int timeBonus = (timeLeft / initialTime * 5).round();
-      score += 10 + timeBonus;
+    // Start animation
+    Timer.periodic(Duration(milliseconds: 16), (timer) {
+      if (animationProgress < 1.0) {
+        animationProgress += 0.02;
+        notifyListeners();
+      } else {
+        timer.cancel();
+        isAnimating = false;
+        notifyListeners();
+      }
+    });
 
-      Future.delayed(Duration(milliseconds: 1500), () {
-        showingFeedback = false;
-        selectedAnswer = null;
-        isLastAnswerCorrect = null;
-        loadNewQuestion();
+    Future.delayed(Duration(seconds: 3), () {
+      showingFeedback = false;
+      if (lives <= 0) {
+        endGame();
+      } else {
+        loadNewCity();
         resetTimer();
         startTimer();
-      });
-    } else {
-      timeLeft = max(timeLeft - 5, 0);
-      lives--;
+      }
+    });
+  }
 
-      Future.delayed(Duration(milliseconds: 1000), () {
-        showingFeedback = false;
-        selectedAnswer = null;
-        isLastAnswerCorrect = null;
-        notifyListeners();
+  int _calculatePoints(double distance) {
+    // Perfect score (within 1km) = 100 points
+    // 0 points if more than 100km away
+    if (distance <= 1) return 100;
+    if (distance >= 100) return 0;
 
-        if (timeLeft <= 0 || lives <= 0) {
-          endGame();
-        } else {
-          startTimer();
-        }
-      });
-    }
+    // Linear interpolation between 100 and 0 points
+    return (100 * (1 - (distance - 1) / 99)).round();
   }
 
   void endGame() {
     isGameOver = true;
     _timer?.cancel();
     notifyListeners();
-  }
-
-  Future<LatLng?> loadCountryMarker() async {
-    try {
-      final geoJsonData = await loadGeoJson();
-      final features = geoJsonData['features'] as List;
-
-      for (var feature in features) {
-        final properties = feature['properties'] as Map<String, dynamic>;
-        final countryName = properties['name'] as String;
-
-        if (countryName == correctAnswer) {
-          final geometry = feature['geometry'];
-          return extractCentroid(geometry);
-        }
-      }
-    } catch (e) {
-      print('Error loading GeoJSON: $e');
-    }
-    return null;
-  }
-
-  Future<Map<String, dynamic>?> loadCountryGeoJson() async {
-    try {
-      final geoJsonData = await loadGeoJson();
-      final features = geoJsonData['features'] as List;
-
-      for (var feature in features) {
-        final properties = feature['properties'] as Map<String, dynamic>;
-        final countryName = properties['name'] as String;
-
-        if (countryName == correctAnswer) {
-          final geometry = feature['geometry'];
-          final centroid = extractCentroid(geometry);
-
-          return {'geometry': geometry, 'centroid': centroid};
-        }
-      }
-    } catch (e) {
-      print('Error loading GeoJSON: $e');
-    }
-    return null;
-  }
-
-  LatLng? extractCentroid(Map<String, dynamic> geometry) {
-    final type = geometry['type'];
-
-    if (type == 'Polygon') {
-      final coordinates = geometry['coordinates'][0] as List;
-      double lat = 0, lng = 0;
-
-      for (var coord in coordinates) {
-        lng += coord[0] as double;
-        lat += coord[1] as double;
-      }
-
-      return LatLng(lat / coordinates.length, lng / coordinates.length);
-    } else if (type == 'MultiPolygon') {
-      final polygons = geometry['coordinates'] as List;
-      int maxPoints = 0;
-      LatLng? centroid;
-
-      for (var polygon in polygons) {
-        final coords = polygon[0] as List;
-        if (coords.length > maxPoints) {
-          maxPoints = coords.length;
-
-          double lat = 0, lng = 0;
-          for (var coord in coords) {
-            lng += coord[0] as double;
-            lat += coord[1] as double;
-          }
-
-          centroid = LatLng(lat / coords.length, lng / coords.length);
-        }
-      }
-
-      return centroid;
-    }
-    return null;
   }
 
   @override
